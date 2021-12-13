@@ -1,0 +1,109 @@
+	//雪花组件
+	// @Author   苦行僧|2021/12/14
+~function () {
+	class SnowFall{
+		constructor(obj) {
+			this.canvas=null;
+			this.flakes=[];
+			this.maxFlake=obj.maxFlake||100;
+			this.ctx=null;
+			this.flakeSize=obj.flakeSize||10;
+			this.fallSpeed=obj.fallSpeed||1
+		}
+		start(){
+			this.snowCanvas();
+			this.createFlakes();
+			this.drawSnow();
+			this.event();
+		}
+		event(){
+			window.addEventListener("resize",()=>{
+				this.canvas.width=window.innerWidth})
+		}
+		snowCanvas(){
+			let snowCanvas = document.createElement("canvas");
+			snowCanvas.id="snowfall";
+			snowCanvas.width=window.innerWidth;
+			snowCanvas.height=window.innerHeight;
+			snowCanvas.setAttribute("style","position:fixed;top:0;left:0;z-index:100000;pointer-events:none;");
+			document.querySelector("body").appendChild(snowCanvas);
+			this.canvas=snowCanvas;
+			this.ctx=snowCanvas.getContext("2d");
+		}
+		createFlakes(){
+			let canvas=this.canvas;
+			for (let i = 0; i < this.maxFlake; i++) {
+				this.flakes.push(new Flake(canvas,canvas.width,canvas.height,this.flakeSize,this.fallSpeed))
+			}
+		}
+		drawSnow(){
+			console.log("绘画");
+			this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+			for (let i = 0; i < this.maxFlake; i++) {
+				this.flakes[i].update();
+				this.flakes[i].render(this.ctx);
+			}
+			let that=this;
+			let req=this.requestAnimationFrame();
+			req(function (){that.drawSnow()})
+		}
+		requestAnimationFrame(){
+			return window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame ||
+				window.msRequestAnimationFrame ||
+				window.oRequestAnimationFrame ||
+				function(callback) { setTimeout(callback, 1000 / 60); };
+		}
+	}
+	class Flake{
+		constructor(canvas,maxWidth,maxHeight,flakeSize,fallSpeed) {
+			this.maxWidth=maxWidth;
+			this.maxHeight=maxHeight;
+			this.flakeSize=flakeSize;
+			this.fallSpeed=fallSpeed;
+			this.canvas=canvas;
+			this.stepSize=Math.random()/20;
+			this.step=0;
+			this.init();
+		}
+		init(){
+			this.x=Math.floor(Math.random()*this.canvas.width);
+			this.y=Math.floor(Math.random()*this.canvas.height);
+			this.size=Math.random()* this.flakeSize+2;
+			this.speed=Math.random()+this.fallSpeed
+			this.speedY=this.speed;
+			this.speedX=0;
+		}
+		update(){
+			this.speedX *=0.98;
+			if(this.speedY<this.speed){
+				this.speedY=this.speed;
+			}
+			this.speedX += Math.sin(this.step += .05) * this.stepSize ;
+			this.x+=this.speedX;
+			this.y+=this.speedY;
+			if(this.x>=this.canvas.width || this.x<=0 ||this.y>=this.canvas.height||this.y<=0){
+				this.reset()
+			}
+		}
+		reset(width,height){
+			this.init();
+			this.y=0;
+		}
+		render(ctx){
+			let snowFlake=ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,this.size);
+			snowFlake.addColorStop(0,"rgba(255,255,255,.9)");
+			snowFlake.addColorStop(.5,"rgba(255,255,255,.5)");
+			snowFlake.addColorStop(1,"rgba(255,255,255,0)");
+			ctx.save()
+			ctx.fillStyle=snowFlake;
+			ctx.beginPath();
+			ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
+			ctx.fill();
+			ctx.restore();
+		}
+	}
+	let snow = new SnowFall({
+		maxFlake:100
+	})
+	snow.start();
+}()
