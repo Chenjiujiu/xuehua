@@ -5,10 +5,11 @@
 		constructor(obj) {
 			this.canvas=null;
 			this.flakes=[];
-			this.maxFlake=obj.maxFlake||100;
+			this.maxFlake=obj.maxFlake||500;
 			this.ctx=null;
 			this.flakeSize=obj.flakeSize||10;
-			this.fallSpeed=obj.fallSpeed||1
+			this.fallSpeed=obj.fallSpeed||1.5;
+			this.imgSrc=obj.imgSrc||0;
 		}
 		start(){
 			this.snowCanvas();
@@ -18,14 +19,15 @@
 		}
 		event(){
 			window.addEventListener("resize",()=>{
-				this.canvas.width=window.innerWidth})
+				this.canvas.width=window.innerWidth;
+			})
 		}
 		snowCanvas(){
 			let snowCanvas = document.createElement("canvas");
 			snowCanvas.id="snowfall";
 			snowCanvas.width=window.innerWidth;
-			snowCanvas.height=window.innerHeight;
-			snowCanvas.setAttribute("style","position:fixed;top:0;left:0;z-index:100000;pointer-events:none;");
+			snowCanvas.height=document.documentElement.offsetHeight;
+			snowCanvas.setAttribute("style","position:absolute;top:0;left:0;z-index:100000;pointer-events:none;");
 			document.querySelector("body").appendChild(snowCanvas);
 			this.canvas=snowCanvas;
 			this.ctx=snowCanvas.getContext("2d");
@@ -33,11 +35,10 @@
 		createFlakes(){
 			let canvas=this.canvas;
 			for (let i = 0; i < this.maxFlake; i++) {
-				this.flakes.push(new Flake(canvas,canvas.width,canvas.height,this.flakeSize,this.fallSpeed))
+				this.flakes.push(new Flake(canvas,canvas.width,canvas.height,this.flakeSize,this.fallSpeed,this.imgSrc))
 			}
 		}
 		drawSnow(){
-			console.log("绘画");
 			this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
 			for (let i = 0; i < this.maxFlake; i++) {
 				this.flakes[i].update();
@@ -55,14 +56,16 @@
 		}
 	}
 	class Flake{
-		constructor(canvas,maxWidth,maxHeight,flakeSize,fallSpeed) {
+		constructor(canvas,maxWidth,maxHeight,flakeSize,fallSpeed,imgsrc) {
 			this.maxWidth=maxWidth;
 			this.maxHeight=maxHeight;
 			this.flakeSize=flakeSize;
 			this.fallSpeed=fallSpeed;
 			this.canvas=canvas;
+			this.imgsrc=imgsrc;
 			this.stepSize=Math.random()/20;
 			this.step=0;
+			this.img='';
 			this.init();
 		}
 		init(){
@@ -90,20 +93,27 @@
 			this.y=0;
 		}
 		render(ctx){
-			let snowFlake=ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,this.size);
-			snowFlake.addColorStop(0,"rgba(255,255,255,.9)");
-			snowFlake.addColorStop(.5,"rgba(255,255,255,.5)");
-			snowFlake.addColorStop(1,"rgba(255,255,255,0)");
-			ctx.save()
-			ctx.fillStyle=snowFlake;
-			ctx.beginPath();
-			ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
-			ctx.fill();
-			ctx.restore();
+			if(this.imgsrc){
+				this.img=new Image();
+				this.img.src=this.imgsrc;
+				let snowFlake=ctx.drawImage(this.img,this.x,this.y,this.size,this.size);
+			}else{
+				let snowFlake=ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,this.size);
+				snowFlake.addColorStop(0,"rgba(255,255,255,.9)");
+				snowFlake.addColorStop(.5,"rgba(255,255,255,.5)");
+				snowFlake.addColorStop(1,"rgba(255,255,255,0)");
+				ctx.save()
+				ctx.fillStyle=snowFlake;
+				ctx.beginPath();
+				ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
+				ctx.fill();
+				ctx.restore();
+			}
 		}
 	}
 	let snow = new SnowFall({
-		maxFlake:100
+		maxFlake:500,
+		flakeSize:10
 	})
 	snow.start();
 }()
